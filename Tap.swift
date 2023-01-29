@@ -44,6 +44,7 @@ class Tap {
             exit(1)
             
         } else {
+            disableTap()
             let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, self.mode.eventTap, 0)
             CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         }
