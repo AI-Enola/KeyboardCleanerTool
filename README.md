@@ -1,4 +1,5 @@
 # KeyboardCleanerTool
+Version : 1.1
 
 For Mac OS : 13.0 or later
 
