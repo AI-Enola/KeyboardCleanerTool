@@ -11,9 +11,11 @@ import Foundation
 import SwiftUI
 
 
-
 class Tap {
-    init() {
+    var mode: Mode
+    
+    init(mode: Mode) {
+        self.mode = mode
         let NX_KITDEFINED: Int = 13    /* application-kit-defined event */
         let NX_SYSDEFINED: Int = 14    /* system-defined event */
         let NX_APPDEFINED: Int = 15    /* application-defined event */
@@ -27,7 +29,7 @@ class Tap {
                                       UInt64(1 << NX_APPDEFINED));
 
         // Create the tap event for the loop
-        mode.eventTap = CGEvent.tapCreate(tap: CGEventTapLocation.cgSessionEventTap,
+        self.mode.eventTap = CGEvent.tapCreate(tap: CGEventTapLocation.cgSessionEventTap,
                                      place: CGEventTapPlacement.headInsertEventTap,
                                      options: CGEventTapOptions.defaultTap,
                                      eventsOfInterest: eventMask,
@@ -36,23 +38,35 @@ class Tap {
             return nil
         }, userInfo: nil)
         // Value can be nil when privacy settings reject tap creation
-        if mode.eventTap == nil {
-            print("Failed to create event tap ! See Privacy settings !")
+        if self.mode.eventTap == nil {
+            let answer = dialogOKCancel(question: "Failed to create event tap !",
+                                        text: "You need to grant access to this application in Privacy & Security settings.")
             exit(1)
+            
+        } else {
+            let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, self.mode.eventTap, 0)
+            CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         }
 
-        let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, mode.eventTap, 0)
-
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
-        CFRunLoopRun()
+        
     }
     
     func enableTap() {
-        CGEvent.tapEnable(tap: mode.eventTap, enable: true)
+        CGEvent.tapEnable(tap: self.mode.eventTap, enable: true)
     }
     
     func disableTap() {
-        CGEvent.tapEnable(tap: mode.eventTap, enable: false)
+        CGEvent.tapEnable(tap: self.mode.eventTap, enable: false)
+    }
+    
+    func dialogOKCancel(question: String, text: String) -> Bool {
+        let alert = NSAlert()
+        alert.icon = NSImage (named: NSImage.cautionName)
+        alert.messageText = question
+        alert.informativeText = text
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Quit")
+        return alert.runModal() == .alertFirstButtonReturn
     }
     
 }

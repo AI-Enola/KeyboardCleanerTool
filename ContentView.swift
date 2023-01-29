@@ -9,48 +9,63 @@
 //
 
 import SwiftUI
+import Foundation
 
-
-struct Mode {
-    var isLocked: Bool // State of button
-    var Text: String // Actual button text
-    static let textLock:  String = "Click to stop cleaning mode" // Text when keyboard locked
-    static let textNotLock: String = "Click to start cleaning mode" // Text when keyboard not locked
-    var eventTap: CFMachPort! //
-}
 
 struct ContentView: View {
+    @State private var mode: Mode
+    @State private var tap: Tap
     
-    @State private var _mode = mode
-    
-    var body: some View {
-        VStack {
-            Text("Keyboard cleaner tool")
-            Button(_mode.Text,action: {
-                tapHandler()
-            })
-        }
-        .padding()
+    init(mode: Mode, tap: Tap) {
+        self.mode = mode
+        self.tap = tap
     }
     
-    func tapHandler() {
-        mode.isLocked.toggle()
-        if(mode.isLocked) {
-            _mode.Text = Mode.textLock
-            tap.enableTap() // Block keyboard input
+    var body: some View {
+        
+        VStack {
+            HStack {
+                self.mode.imgLockState
+                    .font(.system(size: 24))
+            }
+            .padding()
+            
+            HStack {
+                VStack {
+                    Text("Keyboard Cleaner Tool")
+                    Button(self.mode.Text,action: {
+                        tapHandler()
+                    }) 
+                }
+            }
+        }
+        .padding()
+        
+    }
+    
+     func tapHandler() {
+        self.mode.isLocked.toggle()
+
+        if(self.mode.isLocked) {
+            self.mode.Text = Mode.textUnlocked
+            self.mode.imgLockState = Mode.imgLocked
+            self.tap.enableTap() // Block keyboard input
 
         } else {
-            _mode.Text = Mode.textNotLock
-            tap.disableTap() // Pass keyboard input for action
+            self.mode.Text = Mode.textLocked
+            self.mode.imgLockState = Mode.imgUnlocked
+            self.tap.disableTap() // Pass keyboard input for action
         }
     }
 }
+
+
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        let mode = Mode.init(isLocked: false, Text: Mode.textLocked,imgLockState: Mode.imgUnlocked)
+        let tap = Tap(mode:mode) // Init CGEventTap
+        ContentView(mode: mode, tap: tap)
     }
-}
 
-var mode = Mode.init(isLocked: false, Text: Mode.textNotLock) //
-var tap = Tap() // Init CGEventTap
+}
